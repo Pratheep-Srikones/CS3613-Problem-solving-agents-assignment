@@ -1,6 +1,6 @@
 import re
 import random
-
+import copy
 # first we consider cities as 0,1,2,3.... then in the end we assign 0 - a, 1 - b ,.....
 
 def process_input_file(filename):
@@ -64,6 +64,7 @@ def assign_random_cities(truck_assignments, num_cities):
 
     return truck_assignments
 
+# generate random solution
 def assign_valid_random_cities(truck_assignments, num_cities, city_map):
     # Create the adjacency dictionary from the city map
     adjacency_dict = create_adjacency_dictionary(city_map)
@@ -127,6 +128,44 @@ def calculate_total_cost(truck_assignments, city_map):
 
     return total_cost
 
+def hill_climbing(truck_assignments, city_map, maxIterations=100):
+    # Initial optimum cost
+    optimum_cost = calculate_total_cost(truck_assignments, city_map)
+    best_neighbours = [truck_assignments]  # Track the best assignments found
+    current_assignments = truck_assignments
+
+    for _ in range(maxIterations):
+        # Create a deep copy of the current assignments to modify
+        new_truck_assignments = copy.deepcopy(current_assignments)
+
+        # Select two different trucks at random
+        truck_ids = random.sample(list(new_truck_assignments.keys()), 2)
+        truck1, truck2 = truck_ids[0], truck_ids[1]
+        cities1, cities2 = new_truck_assignments[truck1], new_truck_assignments[truck2]
+
+        # Make sure both trucks have at least one city assigned
+        if cities1 and cities2:
+            # Randomly select one city from each truck to swap
+            idx1 = random.randint(0, len(cities1) - 1)
+            idx2 = random.randint(0, len(cities2) - 1)
+
+            # Swap the selected cities between the two trucks
+            cities1[idx1], cities2[idx2] = cities2[idx2], cities1[idx1]
+
+        # Calculate the new cost
+        cost = calculate_total_cost(new_truck_assignments, city_map)
+
+        # Skip this assignment if the cost is a string (indicating a visit is not possible)
+        if isinstance(cost, str):
+            continue
+        
+        # If the new cost is better, update the optimum
+        if cost < optimum_cost:
+            best_neighbours.append(new_truck_assignments)
+            optimum_cost = cost
+            current_assignments = new_truck_assignments  # Update the current assignment to the best found
+
+    return best_neighbours, optimum_cost
 
 def main():
     filename = 'input.txt'
@@ -143,10 +182,12 @@ def main():
 
     truck_dictionary = parse_trucks(raw_trucks)
     print("Truck Dictionary", truck_dictionary)
-    truck_dictionary = assign_valid_random_cities(truck_dictionary, len(city_map), city_map)
-    print("Truck Dictionary", truck_dictionary)
-    total_cost = calculate_total_cost(truck_dictionary, city_map)
-    print("total cost", total_cost)
+    truck_assignments = assign_valid_random_cities(truck_dictionary, len(city_map), city_map)
+    # print("Truck Dictionary", truck_dictionary)
+    # total_cost = calculate_total_cost(truck_assignments, city_map)
+    # print("total cost", total_cost)
+
+    print(hill_climbing(truck_assignments, city_map))
 
 if __name__ == '__main__':
     main()
