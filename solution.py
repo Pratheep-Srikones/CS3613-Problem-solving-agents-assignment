@@ -33,11 +33,7 @@ def create_adjacency_dictionary(city_map):
     adjacency_dictionary = {}
 
     for i in range(len(city_map)):
-        adjacent_cities = []
-        for j in range(len(city_map[i])):
-            if city_map[i][j] != 'N' and city_map[i][j] != 0:  # Exclude 'N' and self-loops
-                adjacent_cities.append(j)
-        adjacency_dictionary[i] = adjacent_cities
+        adjacency_dictionary[i] = {j for j in range(len(city_map[i])) if city_map[i][j] != 'N' and city_map[i][j] != 0}
 
     return adjacency_dictionary
 
@@ -67,9 +63,10 @@ def assign_random_cities(truck_assignments, num_cities):
     return truck_assignments
 
 # generate random solution
-def assign_valid_random_cities(truck_assignments, num_cities, city_map):
+def assign_valid_random_cities(truck_assignments, city_map):
+    num_cities = len(city_map)  # Total number of cities
     # Create the adjacency dictionary from the city map
-    adjacency_dict = create_adjacency_dictionary(city_map)
+    graph = create_adjacency_dictionary(city_map)
     
     city_indices = list(range(1, num_cities))  # List of cities (excluding city 0)
     assigned_cities = {0}  # To keep track of cities already assigned
@@ -81,7 +78,7 @@ def assign_valid_random_cities(truck_assignments, num_cities, city_map):
         # Try assigning cities to the truck until a valid route is found
         while len(assigned_route) < len(cities):
             # Get a list of cities that are adjacent to the current city (and not yet assigned)
-            possible_cities = [city for city in adjacency_dict[start_city] if city not in assigned_cities]
+            possible_cities = [city for city in graph[start_city] if city not in assigned_cities]
             
             if not possible_cities:
                 # If no valid cities are available, restart the assignment for this truck
@@ -185,7 +182,7 @@ def main():
 
     truck_dictionary = parse_trucks(raw_trucks)
 
-    truck_assignments = assign_valid_random_cities(truck_dictionary, len(city_map), city_map)
+    truck_assignments = assign_valid_random_cities(truck_dictionary, city_map)
 
     best_truck_assignments, optimum_cost = hill_climbing(truck_assignments, city_map)
 
@@ -193,7 +190,7 @@ def main():
     city_labels = {i: letter for i, letter in enumerate(string.ascii_lowercase)}
 
     # Save the result to a file named output.txt
-    save_optimum_solution('output.txt', best_truck_assignments[len(best_truck_assignments)-1], optimum_cost, city_labels)
+    save_optimum_solution('Group24.txt', best_truck_assignments[len(best_truck_assignments)-1], optimum_cost, city_labels)
 
 if __name__ == '__main__':
     main()
