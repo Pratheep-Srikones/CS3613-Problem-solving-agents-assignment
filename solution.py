@@ -1,6 +1,8 @@
 import re
 import random
 import copy
+import string
+
 # first we consider cities as 0,1,2,3.... then in the end we assign 0 - a, 1 - b ,.....
 
 def process_input_file(filename):
@@ -167,27 +169,31 @@ def hill_climbing(truck_assignments, city_map, maxIterations=100):
 
     return best_neighbours, optimum_cost
 
+def save_optimum_solution(filename, truck_assignments, total_cost, city_labels):
+    with open(filename, 'w') as file:
+        for truck_id, cities in truck_assignments.items():
+            # Convert city indices to labels and join with commas
+            city_sequence = ",".join(city_labels[city] for city in cities)
+            file.write(f"{truck_id}#{city_sequence}\n")
+
+        # Append total cost at the end
+        file.write(f"{total_cost}\n")
+
 def main():
     filename = 'input.txt'
     city_map, raw_trucks = process_input_file(filename)
 
-    # Output the results
-    print("City Map (n x n Matrix):")
-    for row in city_map:
-        print(row)
-
-    print("\nTruck Information:")
-    for truck in raw_trucks:
-        print(truck)
-
     truck_dictionary = parse_trucks(raw_trucks)
-    print("Truck Dictionary", truck_dictionary)
-    truck_assignments = assign_valid_random_cities(truck_dictionary, len(city_map), city_map)
-    # print("Truck Dictionary", truck_dictionary)
-    # total_cost = calculate_total_cost(truck_assignments, city_map)
-    # print("total cost", total_cost)
 
-    print(hill_climbing(truck_assignments, city_map))
+    truck_assignments = assign_valid_random_cities(truck_dictionary, len(city_map), city_map)
+
+    best_truck_assignments, optimum_cost = hill_climbing(truck_assignments, city_map)
+
+    # Generate city labels from 0 to 25 (i.e., 'a' to 'z')
+    city_labels = {i: letter for i, letter in enumerate(string.ascii_lowercase)}
+
+    # Save the result to a file named output.txt
+    save_optimum_solution('output.txt', best_truck_assignments[len(best_truck_assignments)-1], optimum_cost, city_labels)
 
 if __name__ == '__main__':
     main()
